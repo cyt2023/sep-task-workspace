@@ -3,7 +3,7 @@
 Live demo: https://cyt2023.github.io/sep-task-workspace/
 
 A static demonstration of the task input interface for hospital robot tasks.
-Create tasks, set schedules and repetitions, import JSON arrays, search, inspect
+Create tasks, set schedules and repetitions, import JSON arrays, query due tasks, inspect
 records and cancel tasks.
 
 Tasks are saved in each visitor's browser localStorage. Each browser has its own
