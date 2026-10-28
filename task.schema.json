@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sep.example.org/task-input-system/schemas/task.schema.json",
+  "title": "Task",
+  "description": "Task input schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "task_id",
+    "task_type",
+    "user"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "task_type": {"enum": ["medication_delivery", "sample_delivery", "waste_delivery"]}
+        },
+        "required": ["task_type"]
+      },
+      "then": {
+        "required": ["pickup_point", "dropoff_point", "package"],
+        "properties": {
+          "target_location": false
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "task_type": {"const": "patient_assistance"}
+        },
+        "required": ["task_type"]
+      },
+      "then": {
+        "required": ["pickup_point", "dropoff_point"],
+        "properties": {
+          "package": false,
+          "target_location": false
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "task_type": {"const": "robot_call"}
+        },
+        "required": ["task_type"]
+      },
+      "then": {
+        "required": ["target_location"],
+        "properties": {
+          "pickup_point": false,
+          "dropoff_point": false,
+          "package": false
+        }
+      }
+    }
+  ],
+  "properties": {
+    "task_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "ID for a task. format TBD"
+    },
+    "task_type": {
+      "type": "string",
+      "enum": [
+        "medication_delivery",
+        "sample_delivery",
+        "waste_delivery",
+        "patient_assistance",
+        "robot_call"
+      ],
+      "description": "kind of task. this determines which fields are required"
+    },
+    "pickup_point": {
+      "$ref": "#/$defs/locationReference",
+      "description": "location for package or patient pickup."
+    },
+    "dropoff_point": {
+      "$ref": "#/$defs/locationReference",
+      "description": "location for package or patient dropoff."
+    },
+    "target_location": {
+      "$ref": "#/$defs/locationReference",
+      "description": "location the robot should go to."
+    },
+    "package": {
+      "type": "string",
+      "minLength": 1,
+      "description": "ID/name (TBD) of the item being delivered"
+    },
+    "schedule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scheduled_date", "scheduled_time"],
+      "properties": {
+        "scheduled_date": {
+          "type": "string",
+          "format": "date",
+          "description": "calendar date for the task."
+        },
+        "scheduled_time": {
+          "type": "string",
+          "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$",
+          "description": "time of day in 24-hour HH:mm for the task."
+        },
+        "repeat": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["mode", "count", "interval_minutes"],
+              "properties": {
+                "mode": {"const": "count"},
+                "count": {"type": "integer", "minimum": 1},
+                "interval_minutes": {"type": "integer", "minimum": 1}
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["mode", "interval_minutes"],
+              "properties": {
+                "mode": {"const": "until_cancelled"},
+                "interval_minutes": {"type": "integer", "minimum": 1}
+              }
+            }
+          ],
+          "description": "Optional repetition for a scheduled task."
+        }
+      }
+    },
+    "emergency": {
+      "type": "boolean",
+      "description": "Whether the task is marked as an emergency task. Omission means no emergency label is recorded."
+    },
+    "wait": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["end_condition"],
+      "properties": {
+        "end_condition": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Condition that ends the wait sequence. Open string for now, specific end conditions TBD."
+        }
+      },
+      "description": "Optional. If present, the robot must wait as part of the task, until end_condition is met. Omission means no wait is required."
+    },
+    "user": {
+      "type": "string",
+      "minLength": 1,
+      "description": "ID of user who created the task."
+    }
+  },
+  "$defs": {
+    "locationReference": {
+      "type": "string",
+      "minLength": 1,
+      "description": "location identifier for simulation (e.g.: patient_room1)"
+    }
+  }
+}

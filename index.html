@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Create, schedule and manage hospital robot tasks in your local SEP workspace.">
+  <meta name="sep-storage" content="browser">
+  <title>Task workspace · SEP</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./app.css">
+  <script src="./browser-store.js" defer></script>
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to tasks</a>
+  <aside class="sidebar">
+    <a class="brand" href="./" aria-label="SEP task workspace home"><img src="./favicon.svg" alt="" width="42" height="42"><span>SEP<span class="brand-sub">Task workspace</span></span></a>
+    <div class="workspace-tag"><span class="workspace-dot"></span> Hospital operations</div>
+    <nav aria-label="Workspace views">
+      <button class="nav-item active" data-view="all" aria-current="page"><span data-icon="grid"></span>Overview<span class="nav-count" id="nav-total">0</span></button>
+      <button class="nav-item" data-view="due"><span data-icon="play"></span>Ready to run<span class="nav-count" id="nav-due">0</span></button>
+      <button class="nav-item" data-view="scheduled"><span data-icon="calendar"></span>Scheduled</button>
+      <button class="nav-item" data-view="history"><span data-icon="history"></span>History</button>
+    </nav>
+    <div class="sidebar-note"><span data-icon="layers"></span><strong>One workspace.<br>Every task in view.</strong><p>Create a task, set its timing and keep track of what comes next.</p><button class="text-button" id="guide-open">How it works <span data-icon="chevron"></span></button></div>
+    <div class="sidebar-footer"><span class="connection-dot" id="connection-dot"></span><div><strong id="connection-label">Connecting…</strong><span>Local workspace</span></div><span data-icon="lock"></span></div>
+  </aside>
+
+  <div class="app-body">
+    <header class="topbar"><div class="breadcrumb">Workspace <span>/</span> <strong id="breadcrumb-view">Overview</strong></div><div class="topbar-right"><span data-icon="calendar"></span><time id="today"></time><span class="team-badge" title="SEP team workspace">SEP</span></div></header>
+    <main id="main">
+      <section class="page-heading"><div><div class="eyebrow"><span class="small-cross">+</span> Care in motion</div><h1 id="page-title">A little more organized.<br>A lot more in motion.</h1><p id="page-description">Your tasks, schedules and next steps. All in one place.</p></div><div class="heading-actions"><button class="button secondary" id="import-open"><span data-icon="upload"></span>Import tasks</button><button class="button primary" id="create-open"><span data-icon="plus"></span>New task</button></div></section>
+
+      <div id="page-error" class="page-error" role="alert" hidden></div>
+      <div id="browser-notice" class="browser-notice" role="note" hidden><strong>Browser demo</strong><span>Tasks are saved in this browser. Each visitor has an independent workspace; no robot or shared backend is connected.</span></div>
+      <section class="stats" aria-label="Task summary">
+        <button class="stat" data-view="all"><div class="stat-top"><span>Total tasks</span><span data-icon="layers"></span></div><div class="stat-value" id="stat-total">—</div><span class="stat-foot">Across your workspace</span></button>
+        <button class="stat stat-green" data-view="due"><div class="stat-top"><span>Ready to run</span><span data-icon="play"></span></div><div class="stat-value" id="stat-due">—</div><span class="stat-foot"><span class="mini-dot"></span> Due for the next run</span></button>
+        <button class="stat" data-view="scheduled"><div class="stat-top"><span>Scheduled</span><span data-icon="calendar"></span></div><div class="stat-value" id="stat-scheduled">—</div><span class="stat-foot">Waiting for their time</span></button>
+        <button class="stat" data-view="history"><div class="stat-top"><span>Completed runs</span><span data-icon="check"></span></div><div class="stat-value" id="stat-completed">—</div><span class="stat-foot">Successful occurrences</span></button>
+      </section>
+
+      <div class="workspace-grid">
+        <section class="task-panel" aria-labelledby="task-panel-title">
+          <div class="panel-heading"><div><h2 id="task-panel-title">Your task list <span id="visible-count" class="count-pill">0</span></h2><p>From a quick call to a recurring delivery.</p></div><button class="icon-button" id="refresh" aria-label="Refresh tasks" title="Refresh tasks"><span data-icon="refresh"></span></button></div>
+          <div class="table-toolbar"><div class="tabs" aria-label="Filter tasks"><button class="tab active" data-filter="all" aria-pressed="true">All tasks</button><button class="tab" data-filter="pending" aria-pressed="false">Pending</button><button class="tab" data-filter="executing" aria-pressed="false">In progress</button></div><label class="search"><span data-icon="search"></span><input id="search" type="search" placeholder="Search tasks…" aria-label="Search tasks"></label></div>
+          <div class="type-filter-row"><label for="type-filter">Task type</label><select id="type-filter"><option value="all">All types</option><option value="robot_call">Robot call</option><option value="medication_delivery">Medication delivery</option><option value="sample_delivery">Sample delivery</option><option value="waste_delivery">Waste delivery</option><option value="patient_assistance">Patient assistance</option></select><span id="updated-at">Loading tasks…</span></div>
+          <div class="table-scroll"><table><thead><tr><th scope="col">Task</th><th scope="col">Route / destination</th><th scope="col">Timing</th><th scope="col">Status</th><th scope="col"><span class="sr-only">Details</span></th></tr></thead><tbody id="task-rows"></tbody></table></div>
+          <div class="empty-state" id="empty-state" hidden><span class="empty-icon" data-icon="layers"></span><h3 id="empty-title">A fresh start.</h3><p id="empty-description">Add your first task and give the next step a place to land.</p><button class="button primary" id="empty-create"><span data-icon="plus"></span>Create a task</button><button class="button secondary" id="clear-filters" hidden>Clear filters</button></div>
+          <div class="table-footer"><span><span class="mini-dot"></span> Saved changes persist across restarts</span><span id="table-total">0 tasks</span></div>
+        </section>
+
+        <aside class="right-column" aria-label="Quick actions and schedule">
+          <section class="quick-call"><div class="quick-top"><span class="quick-icon" data-icon="call"></span><span class="subtle-tag">Quick action</span></div><h2>A robot, where<br>you need it.</h2><p>Create an immediate call to a location.</p><form id="quick-form"><label for="quick-location">Destination<input id="quick-location" name="location" required placeholder="e.g. button1" autocomplete="off"></label><label for="quick-user">Requested by<input id="quick-user" name="user" required placeholder="Your user ID" autocomplete="off"></label><p class="form-error" id="quick-error" role="alert" hidden></p><button class="button dark" type="submit"><span data-icon="plus"></span>Create robot call</button></form></section>
+          <section class="upcoming-panel"><div class="section-title"><h2>Coming up</h2><span data-icon="calendar"></span></div><div id="upcoming-list"></div><p class="upcoming-note">Scheduled times follow the server’s local clock.</p></section>
+        </aside>
+      </div>
+      <footer class="main-footer"><span>Built for the work between places.</span><span>SEP · Task input system</span></footer>
+    </main>
+  </div>
+
+  <dialog id="create-dialog" aria-labelledby="create-title"><div class="dialog-header"><div><span class="dialog-kicker">Make the next step simple</span><h2 id="create-title">Create a task</h2></div><button class="icon-button" data-close="create-dialog" aria-label="Close create task"><span data-icon="close"></span></button></div>
+    <form id="create-form"><div class="dialog-content"><label for="task-type">What needs to happen?<select id="task-type" name="task_type"><option value="robot_call">Robot call</option><option value="medication_delivery">Medication delivery</option><option value="sample_delivery">Sample delivery</option><option value="waste_delivery">Waste delivery</option><option value="patient_assistance">Patient assistance</option></select></label>
+      <div class="form-grid"><label>Requested by<input name="user" required placeholder="e.g. user-01"></label><label>Task ID <span class="optional">optional</span><input name="task_id" placeholder="Generated automatically"></label></div>
+      <label id="target-field">Destination<input name="target_location" required placeholder="e.g. patient_room1"></label>
+      <div class="form-grid" id="route-fields" hidden><label>Pickup point<input name="pickup_point" placeholder="e.g. laboratory1" disabled></label><label>Dropoff point<input name="dropoff_point" placeholder="e.g. patient_room1" disabled></label></div>
+      <label id="package-field" hidden>Package<input name="package" placeholder="Item or package ID" disabled></label>
+      <div class="form-divider"></div><label for="timing">When should it run?<select id="timing" name="timing"><option value="now">As soon as possible</option><option value="once">At a scheduled time</option><option value="count">Repeat a fixed number of times</option><option value="until_cancelled">Repeat until cancelled</option></select></label>
+      <div id="schedule-fields" hidden><div class="form-grid"><label>Start date<input type="date" name="scheduled_date" disabled></label><label>Start time<input type="time" name="scheduled_time" disabled></label></div><div class="form-grid" id="repeat-fields" hidden><label>Interval in minutes<input name="interval_minutes" type="number" min="1" step="1" value="30" disabled></label><label id="count-field">Repeats after first run<input name="count" type="number" min="1" step="1" value="2" disabled></label></div><p class="field-hint" id="repeat-hint" hidden></p></div>
+      <div class="form-divider"></div><label class="checkbox-label"><input name="emergency" type="checkbox">Mark as emergency</label><label class="checkbox-label"><input id="wait-toggle" type="checkbox">Include a waiting condition</label><label id="wait-field" hidden>End condition<input name="end_condition" placeholder="e.g. staff_confirmation" disabled></label>
+      <p class="form-error" id="create-error" role="alert" hidden></p></div><div class="dialog-footer"><button class="button secondary" type="button" data-close="create-dialog">Go back</button><button class="button primary" type="submit"><span data-icon="plus"></span>Create task</button></div></form>
+  </dialog>
+
+  <dialog id="import-dialog" aria-labelledby="import-title"><div class="dialog-header"><div><span class="dialog-kicker">Bring your tasks together</span><h2 id="import-title">Import tasks</h2></div><button class="icon-button" data-close="import-dialog" aria-label="Close import tasks"><span data-icon="close"></span></button></div><form id="import-form"><div class="dialog-content"><label class="file-drop"><span data-icon="upload"></span><strong>Choose a JSON task file</strong><span>A JSON array of tasks, up to 2 MB.</span><input id="import-file" type="file" accept=".json,application/json" required></label><label for="import-preview">File preview<textarea id="import-preview" rows="8" readonly placeholder="Your tasks will appear here"></textarea></label><p class="field-hint">The whole batch is checked before saving. An invalid task or duplicate ID rejects the batch.</p><p class="form-error" id="import-error" role="alert" hidden></p></div><div class="dialog-footer"><button class="button secondary" type="button" data-close="import-dialog">Go back</button><button class="button primary" id="import-submit" type="submit" disabled>Import tasks</button></div></form></dialog>
+
+  <dialog id="detail-dialog" aria-labelledby="detail-title"><div class="dialog-header"><div><span class="dialog-kicker">Task details</span><h2 id="detail-title">Task</h2></div><button class="icon-button" data-close="detail-dialog" aria-label="Close task details"><span data-icon="close"></span></button></div><div class="dialog-content" id="detail-content"></div><div class="dialog-footer" id="detail-actions"></div></dialog>
+  <dialog id="cancel-dialog" aria-labelledby="cancel-title"><div class="dialog-header"><h2 id="cancel-title">Cancel this task?</h2><button class="icon-button" data-close="cancel-dialog" aria-label="Close cancellation"><span data-icon="close"></span></button></div><div class="dialog-content"><p id="cancel-description"></p><p class="form-error" id="cancel-error" role="alert" hidden></p></div><div class="dialog-footer"><button class="button secondary" data-close="cancel-dialog">Keep task</button><button class="button danger" id="cancel-confirm">Cancel task</button></div></dialog>
+  <dialog id="guide-dialog" aria-labelledby="guide-title"><div class="dialog-header"><h2 id="guide-title">Your task workspace</h2><button class="icon-button" data-close="guide-dialog" aria-label="Close guide"><span data-icon="close"></span></button></div><div class="dialog-content guide-content"><h3>Create or import</h3><p>Add one of the five task types, make a quick robot call, or import a JSON array of tasks.</p><h3>Plan the timing</h3><p>Run immediately, choose a start time, or repeat on an interval. A repeat count of 2 means three total runs.</p><h3>Track what comes next</h3><p>Ready to run shows due tasks. Querying a task does not start it. Actual robot execution is handled separately.</p><h3>Cancel with clarity</h3><p>Cancellation stops future runs. An executing task stays in progress until its stop is confirmed by the execution layer.</p></div></dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
+</body>
+</html>
